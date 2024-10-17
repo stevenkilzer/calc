@@ -31,12 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <div className="flex">
-            <Sidebar className="fixed left-0 top-0 z-40 h-screen" />
-            <main className="flex-1 lg:ml-[250px]">
-              {children}
-            </main>
-          </div>
+          <Sidebar />
+          <main className="p-4 sm:ml-[250px]">
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>

@@ -1,28 +1,42 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Home, Search, Layers, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, Zap } from 'lucide-react'
+import { Home, Search, Layers, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, Zap, X, Menu } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useTheme } from './ThemeProvider'
 
 const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
-  return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="lg:hidden">
-          <Layers className="h-4 w-4" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="p-0">
-        <SidebarContent />
-      </SheetContent>
+  const [isOpen, setIsOpen] = useState(true)
 
-      <div className={cn("hidden lg:block", className)}>
+  return (
+    <>
+      {!isOpen && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed top-4 left-4 z-50"
+          onClick={() => setIsOpen(true)}
+        >
+          <Menu className="h-4 w-4" />
+        </Button>
+      )}
+      <div
+        className={cn(
+          "fixed left-0 top-0 z-40 h-screen w-[250px] bg-background transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          className
+        )}
+      >
+        <div className="flex items-center justify-between p-4">
+          <h2 className="text-lg font-semibold">Business Time</h2>
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
         <SidebarContent />
       </div>
-    </Sheet>
+    </>
   )
 }
 
@@ -30,20 +44,13 @@ const SidebarContent = () => {
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <div className="flex h-full w-[250px] flex-col border-r bg-background">
-      <div className="flex items-center justify-between p-3">
-        <h2 className="text-lg font-semibold">Business Time</h2>
-        <Button variant="ghost" size="icon">
-          <ChevronDown className="h-4 w-4" />
-        </Button>
-      </div>
+    <>
       <nav className="flex-1 space-y-1 p-2">
         <NavItem icon={<Home className="mr-2 h-4 w-4" />}>Home</NavItem>
         <NavItem icon={<Search className="mr-2 h-4 w-4" />}>Search</NavItem>
         <div className="py-1">
           <h3 className="mb-1 px-2 text-sm font-semibold">Projects</h3>
           <ProjectDropdown name="Default Project" />
-          {/* You can add more ProjectDropdown components here for other projects */}
         </div>
       </nav>
       <div className="mt-auto border-t p-2 space-y-1">
@@ -57,7 +64,7 @@ const SidebarContent = () => {
         <NavItem icon={<Settings className="mr-2 h-4 w-4" />}>Settings</NavItem>
         <NavItem icon={<HelpCircle className="mr-2 h-4 w-4" />}>Help</NavItem>
       </div>
-    </div>
+    </>
   )
 }
 
