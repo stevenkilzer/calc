@@ -1,48 +1,149 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { useProject } from '@/components/ProjectContext'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { formatNumber } from "@/lib/utils"
+import { FormattedNumberInput } from '@/components/FormattedNumberInput'
 
-const BalanceSheet = ({ projectId }: { projectId: string }) => {
-  const { projects } = useProject()
-  const project = projects.find(p => p.id === projectId)
-
-  if (!project) return <div>Project not found</div>
-
-  // Assuming project.data contains the necessary financial information
-  const { assets, liabilities, equity } = project.data || {}
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Balance Sheet - {project.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead>Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={2} className="font-bold">Assets</TableCell>
-            </TableRow>
-            {/* Render asset items here */}
-            <TableRow>
-              <TableCell colSpan={2} className="font-bold">Liabilities</TableCell>
-            </TableRow>
-            {/* Render liability items here */}
-            <TableRow>
-              <TableCell colSpan={2} className="font-bold">Equity</TableCell>
-            </TableRow>
-            {/* Render equity items here */}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  )
+type BalanceSheetData = {
+  revenue: { ecommerce: number; wholesale: number; }
+  cogs: number;
+  selling: number;
+  marketing: number;
+  coreOverhead: number;
 }
 
-export default BalanceSheet
+const defaultData: BalanceSheetData = {
+  revenue: { ecommerce: 0, wholesale: 0 },
+  cogs: 0,
+  selling: 0,
+  marketing: 0,
+  coreOverhead: 0,
+}
+
+export default function BalanceSheetPage() {
+  const params = useParams()
+  const id = params.id as string
+  const { projects, updateProjectData } = useProject()
+  const project = projects.find(p => p.id === id)
+
+  const [data, setData] = useState<BalanceSheetData>(defaultData)
+
+  useEffect(() => {
+    if (project && project.data && project.data.balanceSheet) {
+      setData(project.data.balanceSheet)
+    }
+  }, [project])
+
+  const handleInputChange = (
+    field: keyof BalanceSheetData,
+    subfield: keyof BalanceSheetData['revenue'] | null,
+    value: number
+  ) => {
+    setData(prevData => {
+      if (field === 'revenue' && subfield) {
+        return {
+          ...prevData,
+          revenue: {
+            ...prevData.revenue,
+            [subfield]: value
+          }
+        }
+      } else {
+        return {
+          ...prevData,
+          [field]: value
+        }
+      }
+    })
+  }
+
+  const handleSave = () => {
+    if (project) {
+      updateProjectData(id, { ...project.data, balanceSheet: data })
+    }
+  }
+
+  // Calculations
+  const netRevenue = data.revenue.ecommerce + data.revenue.wholesale
+  const grossProfit = netRevenue - data.cogs
+  const grossMargin = netRevenue !== 0 ? (grossProfit / netRevenue) * 100 : 0
+  const contributionProfit = grossProfit - data.selling - data.marketing
+  const contributionMargin = netRevenue !== 0 ? (contributionProfit / netRevenue) * 100 : 0
+  const operatingIncome = contributionProfit - data.coreOverhead
+  const operatingMargin = netRevenue !== 0 ? (operatingIncome / netRevenue) * 100 : 0
+
+  const renderRow = (label: string, value: number, isInput: boolean = false, field: keyof BalanceSheetData, subfield: keyof BalanceSheetData['revenue'] | null = null, isTotal: boolean = false) => (
+    <TableRow className={isTotal ? "bg-muted" : ""}>
+      <TableCell className={`font-medium ${isTotal ? "" : "pl-4"}`}>{label}</TableCell>
+      <TableCell>
+        {isInput ? (
+          <FormattedNumberInput
+            value={value}
+            onChange={(newValue) => handleInputChange(field, subfield, newValue)}
+            className="w-full"
+          />
+        ) : (
+          `$${formatNumber(value)}`
+        )}
+      </TableCell>
+      <TableCell>{netRevenue !== 0 ? `${formatNumber((value / netRevenue) * 100, 1)}%` : 'N/A'}</TableCell>
+    </TableRow>
+  )
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Balance Sheet - {project?.name}</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>Financial Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[250px]">Item</TableHead>
+                <TableHead>This Year</TableHead>
+                <TableHead>% of Net Revenue</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">Revenue</TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+              {renderRow("E-commerce", data.revenue.ecommerce, true, 'revenue', 'ecommerce')}
+              {renderRow("Wholesale", data.revenue.wholesale, true, 'revenue', 'wholesale')}
+              {renderRow("Net Revenue", netRevenue, false, 'revenue', null, true)}
+              {renderRow("COGs", data.cogs, true, 'cogs')}
+              {renderRow("Gross Profit", grossProfit, false, 'revenue', null, true)}
+              <TableRow>
+                <TableCell className="pl-4 italic">Gross Margin</TableCell>
+                <TableCell colSpan={2}>{formatNumber(grossMargin, 1)}%</TableCell>
+              </TableRow>
+              {renderRow("Selling", data.selling, true, 'selling')}
+              {renderRow("Marketing", data.marketing, true, 'marketing')}
+              {renderRow("Contribution Profit", contributionProfit, false, 'revenue', null, true)}
+              <TableRow>
+                <TableCell className="pl-4 italic">Contribution Margin</TableCell>
+                <TableCell colSpan={2}>{formatNumber(contributionMargin, 1)}%</TableCell>
+              </TableRow>
+              {renderRow("Core Overhead", data.coreOverhead, true, 'coreOverhead')}
+              {renderRow("Operating Income", operatingIncome, false, 'revenue', null, true)}
+              <TableRow>
+                <TableCell className="pl-4 italic">Operating Margin</TableCell>
+                <TableCell colSpan={2}>{formatNumber(operatingMargin, 1)}%</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+          <div className="mt-4">
+            <Button onClick={handleSave}>Save</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

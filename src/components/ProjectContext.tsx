@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { generateSampleProject } from './generateSampleProject' // Make sure to create this file
 
 type Project = {
   id: string;
@@ -28,6 +29,11 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const storedProjects = localStorage.getItem('projects')
     if (storedProjects) {
       setProjects(JSON.parse(storedProjects))
+    } else {
+      // If no projects exist, create the sample project
+      const sampleProject = generateSampleProject()
+      setProjects([sampleProject])
+      localStorage.setItem('projects', JSON.stringify([sampleProject]))
     }
   }, [])
 
