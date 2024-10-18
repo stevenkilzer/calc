@@ -40,13 +40,13 @@ export default function BalanceSheetPage() {
     }
   }, [project])
 
-  const handleInputChange = <K extends keyof BalanceSheetData>(
-    field: K,
-    subfield: K extends 'revenue' ? keyof BalanceSheetData['revenue'] : never,
+  const handleInputChange = (
+    field: keyof BalanceSheetData,
+    subfield: keyof BalanceSheetData['revenue'] | null,
     value: number
   ) => {
     setData(prevData => {
-      if (field === 'revenue') {
+      if (field === 'revenue' && subfield) {
         return {
           ...prevData,
           revenue: {
@@ -78,7 +78,7 @@ export default function BalanceSheetPage() {
   const operatingIncome = contributionProfit - data.coreOverhead
   const operatingMargin = netRevenue !== 0 ? (operatingIncome / netRevenue) * 100 : 0
 
-  const renderRow = (label: string, value: number, isInput: boolean = false, field: string, subfield: string | null = null, isTotal: boolean = false) => (
+  const renderRow = (label: string, value: number, isInput: boolean = false, field: keyof BalanceSheetData, subfield: keyof BalanceSheetData['revenue'] | null = null, isTotal: boolean = false) => (
     <TableRow className={isTotal ? "bg-muted" : ""}>
       <TableCell className={`font-medium ${isTotal ? "" : "pl-4"}`}>{label}</TableCell>
       <TableCell>
