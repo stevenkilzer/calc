@@ -40,18 +40,26 @@ export default function BalanceSheetPage() {
     }
   }, [project])
 
-  const handleInputChange = (field: keyof BalanceSheetData, subfield: string | null, value: number) => {
+  const handleInputChange = <K extends keyof BalanceSheetData>(
+    field: K,
+    subfield: K extends 'revenue' ? keyof BalanceSheetData['revenue'] : never,
+    value: number
+  ) => {
     setData(prevData => {
-      if (subfield) {
+      if (field === 'revenue') {
         return {
           ...prevData,
-          [field]: {
-            ...prevData[field as keyof BalanceSheetData],
+          revenue: {
+            ...prevData.revenue,
             [subfield]: value
           }
         }
+      } else {
+        return {
+          ...prevData,
+          [field]: value
+        }
       }
-      return { ...prevData, [field]: value }
     })
   }
 
