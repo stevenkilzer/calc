@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Input } from "@/components/ui/input";
 import { formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
 
-interface FormattedNumberInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FormattedNumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: number;
   onChange: (value: number) => void;
 }
@@ -18,7 +18,7 @@ export const FormattedNumberInput: React.FC<FormattedNumberInputProps> = ({
     setDisplayValue(formatNumberWithCommas(value));
   }, [value]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
     setDisplayValue(rawValue);
     const numericValue = parseFormattedNumber(rawValue);
