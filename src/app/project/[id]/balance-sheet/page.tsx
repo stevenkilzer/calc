@@ -40,12 +40,15 @@ export default function BalanceSheetPage() {
     }
   }, [project])
 
-  const handleInputChange = (field: string, subfield: string | null, value: number) => {
+  const handleInputChange = (field: keyof BalanceSheetData, subfield: string | null, value: number) => {
     setData(prevData => {
       if (subfield) {
         return {
           ...prevData,
-          [field]: { ...prevData[field as keyof BalanceSheetData], [subfield]: value }
+          [field]: {
+            ...prevData[field as keyof BalanceSheetData],
+            [subfield]: value
+          }
         }
       }
       return { ...prevData, [field]: value }
