@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChartContainer, ChartTooltip, ChartLegend } from "@/components/ui/chart"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Tooltip, Legend } from 'recharts';
 import { useTheme } from '@/components/ThemeProvider'
+import { useProject } from '@/components/ProjectContext'
 
 type InputValues = {
   revenue: number
@@ -75,16 +76,37 @@ const formatPercentage = (value: number): string => {
 }
 
 export function BusinessCalculator() {
+  const { currentProject, updateProjectData } = useProject()
   const [inputs, setInputs] = useState<InputValues>(initialInputs)
   const [results, setResults] = useState<Results | null>(null)
   const [amortizationData, setAmortizationData] = useState<AmortizationData[]>([]);
   const { theme } = useTheme();
 
+  useEffect(() => {
+    if (currentProject && currentProject.data) {
+      setInputs(currentProject.data.inputs || initialInputs)
+      setResults(currentProject.data.results || null)
+      setAmortizationData(currentProject.data.amortizationData || [])
+    } else {
+      setInputs(initialInputs)
+      setResults(null)
+      setAmortizationData([])
+    }
+  }, [currentProject])
+
   const handleInputChange = (key: keyof InputValues, value: string) => {
-    setInputs(prev => ({
-      ...prev,
+    const updatedInputs = {
+      ...inputs,
       [key]: Number(value.replace(/[^0-9.-]+/g,"")) || 0
-    }))
+    }
+    setInputs(updatedInputs)
+    if (currentProject) {
+      updateProjectData(currentProject.id, { 
+        inputs: updatedInputs, 
+        results, 
+        amortizationData 
+      })
+    }
   }
 
   const calculateResults = () => {
@@ -105,7 +127,7 @@ export function BusinessCalculator() {
     
     const cashFlow = netProfit - (monthlyPayment * 12)
 
-    setResults({
+    const newResults = {
       grossProfit,
       netProfit,
       grossMargin,
@@ -114,7 +136,9 @@ export function BusinessCalculator() {
       monthlyPayment,
       totalInterest,
       cashFlow
-    })
+    }
+
+    setResults(newResults)
 
     let balance = loanAmount;
     let totalIncome = 0;
@@ -140,6 +164,14 @@ export function BusinessCalculator() {
     }
 
     setAmortizationData(amortization);
+
+    if (currentProject) {
+      updateProjectData(currentProject.id, { 
+        inputs, 
+        results: newResults, 
+        amortizationData: amortization 
+      })
+    }
   }
 
   const renderInputSection = (title: string, keys: (keyof InputValues)[]) => (
