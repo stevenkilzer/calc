@@ -49,7 +49,7 @@ export const BusinessCalculator: React.FC<{ projectId?: string }> = ({ projectId
 
   useEffect(() => {
     if (project && project.data) {
-      setData(project.data)
+      setData(project.data as CalculatorData)
     }
   }, [project])
 
@@ -60,9 +60,11 @@ export const BusinessCalculator: React.FC<{ projectId?: string }> = ({ projectId
       
       if (name.includes('.')) {
         const [category, subCategory] = name.split('.')
-        newData[category as keyof CalculatorData][subCategory] = parseFloat(value) || 0
+        if (category in newData && typeof newData[category as keyof CalculatorData] === 'object') {
+          ;(newData[category as keyof CalculatorData] as any)[subCategory] = parseFloat(value) || 0
+        }
       } else {
-        newData[name as keyof CalculatorData] = parseFloat(value) || 0
+        ;(newData as any)[name] = parseFloat(value) || 0
       }
 
       return newData
