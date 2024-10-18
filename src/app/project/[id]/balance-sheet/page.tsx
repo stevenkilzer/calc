@@ -121,22 +121,22 @@ export default function BalanceSheetPage() {
               </TableRow>
               {renderRow("E-commerce", data.revenue.ecommerce, true, 'revenue', 'ecommerce')}
               {renderRow("Wholesale", data.revenue.wholesale, true, 'revenue', 'wholesale')}
-              {renderRow("Net Revenue", netRevenue, false, '', null, true)}
+              {renderRow("Net Revenue", netRevenue, false, 'revenue', null, true)}
               {renderRow("COGs", data.cogs, true, 'cogs')}
-              {renderRow("Gross Profit", grossProfit, false, '', null, true)}
+              {renderRow("Gross Profit", grossProfit, false, 'revenue', null, true)}
               <TableRow>
                 <TableCell className="pl-4 italic">Gross Margin</TableCell>
                 <TableCell colSpan={2}>{formatNumber(grossMargin, 1)}%</TableCell>
               </TableRow>
               {renderRow("Selling", data.selling, true, 'selling')}
               {renderRow("Marketing", data.marketing, true, 'marketing')}
-              {renderRow("Contribution Profit", contributionProfit, false, '', null, true)}
+              {renderRow("Contribution Profit", contributionProfit, false, 'revenue', null, true)}
               <TableRow>
                 <TableCell className="pl-4 italic">Contribution Margin</TableCell>
                 <TableCell colSpan={2}>{formatNumber(contributionMargin, 1)}%</TableCell>
               </TableRow>
               {renderRow("Core Overhead", data.coreOverhead, true, 'coreOverhead')}
-              {renderRow("Operating Income", operatingIncome, false, '', null, true)}
+              {renderRow("Operating Income", operatingIncome, false, 'revenue', null, true)}
               <TableRow>
                 <TableCell className="pl-4 italic">Operating Margin</TableCell>
                 <TableCell colSpan={2}>{formatNumber(operatingMargin, 1)}%</TableCell>
