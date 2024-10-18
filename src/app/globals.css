@@ -76,9 +76,3 @@ body {
     @apply bg-background text-foreground;
   }
 }
-
-.recharts-tooltip-wrapper .recharts-default-tooltip {
-  background-color: var(--background) !important;
-  border-color: var(--border) !important;
-  color: var(--foreground) !important;
-}

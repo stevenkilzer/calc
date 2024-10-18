@@ -1,3 +1,5 @@
+// src/components/FormattedNumberInput.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
