@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 type Project = {
   id: string;
   name: string;
-  data?: any; // This will store the business calculator data
+  data?: any;
 }
 
 type ProjectContextType = {
@@ -14,6 +14,7 @@ type ProjectContextType = {
   addProject: (name: string) => void;
   selectProject: (id: string) => void;
   updateProjectData: (id: string, data: any) => void;
+  deleteProject: (id: string) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined)
@@ -58,8 +59,17 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const deleteProject = (id: string) => {
+    const updatedProjects = projects.filter(project => project.id !== id)
+    setProjects(updatedProjects)
+    localStorage.setItem('projects', JSON.stringify(updatedProjects))
+    if (currentProject && currentProject.id === id) {
+      setCurrentProject(updatedProjects.length > 0 ? updatedProjects[0] : null)
+    }
+  }
+
   return (
-    <ProjectContext.Provider value={{ projects, currentProject, addProject, selectProject, updateProjectData }}>
+    <ProjectContext.Provider value={{ projects, currentProject, addProject, selectProject, updateProjectData, deleteProject }}>
       {children}
     </ProjectContext.Provider>
   )

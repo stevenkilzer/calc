@@ -1,40 +1,37 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import { Home, Search, Layers, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, Zap, X, Menu, Plus } from 'lucide-react'
+import React, { useState } from 'react'
+import { Home, Search, Layers, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, Zap, X, Menu, Plus, Trash2 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useTheme } from './ThemeProvider'
+import { useTheme } from '@/components/ThemeProvider'
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-
-type Project = {
-  id: string;
-  name: string;
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { useProject } from '@/components/ProjectContext'
+import Link from 'next/link'
 
 const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const [isOpen, setIsOpen] = useState(true)
-  const [projects, setProjects] = useState<Project[]>([])
   const [newProjectName, setNewProjectName] = useState('')
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
+  const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false)
+  const { projects, addProject, deleteProject } = useProject()
+  const { theme, toggleTheme } = useTheme()
 
-  useEffect(() => {
-    const storedProjects = localStorage.getItem('projects')
-    if (storedProjects) {
-      setProjects(JSON.parse(storedProjects))
-    }
-  }, [])
-
-  const addProject = () => {
+  const handleAddProject = () => {
     if (newProjectName.trim()) {
-      const newProject: Project = {
-        id: Date.now().toString(),
-        name: newProjectName.trim()
-      }
-      const updatedProjects = [...projects, newProject]
-      setProjects(updatedProjects)
-      localStorage.setItem('projects', JSON.stringify(updatedProjects))
+      addProject(newProjectName)
       setNewProjectName('')
+      setIsAddProjectDialogOpen(false)
+    }
+  }
+
+  const handleDeleteProject = () => {
+    if (projectToDelete) {
+      deleteProject(projectToDelete)
+      setIsDeleteDialogOpen(false)
+      setProjectToDelete(null)
     }
   }
 
@@ -63,65 +60,78 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <SidebarContent projects={projects} addProject={addProject} setNewProjectName={setNewProjectName} newProjectName={newProjectName} />
-      </div>
-    </>
-  )
-}
-
-const SidebarContent = ({ projects, addProject, setNewProjectName, newProjectName }: { 
-  projects: Project[], 
-  addProject: () => void, 
-  setNewProjectName: (name: string) => void, 
-  newProjectName: string 
-}) => {
-  const { theme, toggleTheme } = useTheme()
-
-  return (
-    <>
-      <nav className="flex-1 space-y-1 p-2">
-        <NavItem icon={<Home className="mr-2 h-4 w-4" />}>Home</NavItem>
-        <NavItem icon={<Search className="mr-2 h-4 w-4" />}>Search</NavItem>
-        <div className="py-1">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-sm font-semibold">Projects</h3>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Project</DialogTitle>
-                </DialogHeader>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    placeholder="Project name"
-                    value={newProjectName}
-                    onChange={(e) => setNewProjectName(e.target.value)}
-                  />
-                  <Button onClick={addProject}>Add</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+        <nav className="flex-1 space-y-1 p-2">
+          <NavItem icon={<Home className="mr-2 h-4 w-4" />}>Home</NavItem>
+          <NavItem icon={<Search className="mr-2 h-4 w-4" />}>Search</NavItem>
+          <div className="py-1">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-sm font-semibold">Projects</h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 p-0"
+                onClick={() => setIsAddProjectDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {projects.map((project) => (
+              <ProjectItem 
+                key={project.id} 
+                id={project.id}
+                name={project.name} 
+                onDelete={() => {
+                  setProjectToDelete(project.id)
+                  setIsDeleteDialogOpen(true)
+                }}
+              />
+            ))}
           </div>
-          {projects.map((project) => (
-            <ProjectDropdown key={project.id} name={project.name} />
-          ))}
+        </nav>
+        <div className="mt-auto border-t p-2 space-y-1">
+          <NavItem 
+            icon={theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+            onClick={toggleTheme}
+          >
+            Theme
+          </NavItem>
+          <NavItem icon={<User className="mr-2 h-4 w-4" />}>Account</NavItem>
+          <NavItem icon={<Settings className="mr-2 h-4 w-4" />}>Settings</NavItem>
+          <NavItem icon={<HelpCircle className="mr-2 h-4 w-4" />}>Help</NavItem>
         </div>
-      </nav>
-      <div className="mt-auto border-t p-2 space-y-1">
-        <NavItem 
-          icon={theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
-          onClick={toggleTheme}
-        >
-          Theme
-        </NavItem>
-        <NavItem icon={<User className="mr-2 h-4 w-4" />}>Account</NavItem>
-        <NavItem icon={<Settings className="mr-2 h-4 w-4" />}>Settings</NavItem>
-        <NavItem icon={<HelpCircle className="mr-2 h-4 w-4" />}>Help</NavItem>
       </div>
+      <Dialog open={isAddProjectDialogOpen} onOpenChange={setIsAddProjectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Project</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            handleAddProject()
+          }}>
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder="Project name"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+              />
+              <Button type="submit">Add</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this project? This action cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteProject}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
@@ -152,42 +162,69 @@ const NavItem = ({
   )
 }
 
-const ProjectDropdown = ({ name }: { name: string }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
-
-  return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="space-y-1"
-    >
-      <Button
-        variant="ghost"
-        className="w-full justify-start font-normal h-8 px-2"
-        onClick={() => setIsOpen(!isOpen)}
+const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelete: () => void }) => {
+    const [isOpen, setIsOpen] = useState(false)
+    const [isHovered, setIsHovered] = useState(false)
+  
+    return (
+      <div
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="relative"
       >
-        <div className="flex items-center w-full">
-          <div className="w-6 mr-2 flex justify-center">
-            {isHovered || isOpen ? (
-              isOpen ? (
-                <ChevronDown className="h-4 w-4" />
+      <div className="flex items-center justify-between">
+        <Button
+          variant="ghost"
+          className="w-full justify-start font-normal h-8 px-2"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div className="flex items-center w-full">
+            <div className="w-6 mr-2 flex justify-center">
+              {isHovered || isOpen ? (
+                isOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )
               ) : (
-                <ChevronRight className="h-4 w-4" />
-              )
-            ) : (
-              <Zap className="h-4 w-4" />
-            )}
+                <Zap className="h-4 w-4" />
+              )}
+            </div>
+            {name}
           </div>
-          {name}
-        </div>
-      </Button>
+        </Button>
+        {isHovered && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 absolute right-0"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
       {isOpen && (
-        <div className="ml-6 space-y-1">
-          <NavItem>Analysis</NavItem>
-          <NavItem>Setups</NavItem>
-          <NavItem>Views</NavItem>
-        </div>
+        <div className="ml-6 space-y-1 mt-1">
+        <Link href={`/project/${id}`}>
+          <NavItem>Overview</NavItem>
+        </Link>
+        <Link href={`/project/${id}/balance-sheet`}>
+          <NavItem>Balance Sheet</NavItem>
+        </Link>
+        <Link href={`/project/${id}/cash-flow`}>
+          <NavItem>Cash Flow</NavItem>
+        </Link>
+        <Link href={`/project/${id}/income-statement`}>
+          <NavItem>Income Statement</NavItem>
+        </Link>
+        <Link href={`/project/${id}/loan-details`}>
+          <NavItem>Loan Details</NavItem>
+        </Link>
+      </div>
       )}
     </div>
   )
