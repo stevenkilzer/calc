@@ -7,6 +7,12 @@ import { Label } from "@/components/ui/label"
 import { formatNumber } from "@/lib/utils"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts'
 
+type CashFlowData = {
+  operatingActivities: Record<string, number>;
+  investingActivities: Record<string, number>;
+  financingActivities: Record<string, number>;
+}
+
 const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
   const { projects } = useProject()
   const project = projects.find(p => p.id === projectId)
@@ -21,7 +27,11 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   const balanceSheet = project.data?.balanceSheet || {}
   const loanDetails = project.data?.loanDetails || {}
-  const cashFlow = project.data?.cashFlow || {}
+  const cashFlow: CashFlowData = project.data?.cashFlow || {
+    operatingActivities: {},
+    investingActivities: {},
+    financingActivities: {}
+  }
 
   // Balance Sheet Calculations
   const netRevenue = (balanceSheet.revenue?.ecommerce || 0) + (balanceSheet.revenue?.wholesale || 0)
@@ -39,9 +49,9 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
   const monthlyPayment = loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1)
 
   // Cash Flow Calculations
-  const totalOperatingCashFlow = Object.values(cashFlow.operatingActivities || {}).reduce((sum, value) => sum + (value as number), 0)
-  const totalInvestingCashFlow = Object.values(cashFlow.investingActivities || {}).reduce((sum, value) => sum + (value as number), 0)
-  const totalFinancingCashFlow = Object.values(cashFlow.financingActivities || {}).reduce((sum, value) => sum + (value as number), 0)
+  const totalOperatingCashFlow = Object.values(cashFlow.operatingActivities).reduce((sum: number, value) => sum + value, 0)
+  const totalInvestingCashFlow = Object.values(cashFlow.investingActivities).reduce((sum: number, value) => sum + value, 0)
+  const totalFinancingCashFlow = Object.values(cashFlow.financingActivities).reduce((sum: number, value) => sum + value, 0)
   const netCashFlow = totalOperatingCashFlow + totalInvestingCashFlow + totalFinancingCashFlow
 
   // Calculate combined schedule
@@ -176,14 +186,14 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
               />
               <YAxis label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft' }} />
               <Tooltip 
-  formatter={(value: number) => ['$' + formatNumber(value, 2)]}
-  labelFormatter={(label: number) => isAnnualView ? `Year ${Math.ceil(label / 12)}` : `Month ${label}`}
-  contentStyle={{
-    backgroundColor: 'var(--popover)',
-    borderColor: 'var(--border)',
-    color: 'var(--popover-foreground)'
-  }}
-/>
+                formatter={(value: number) => ['$' + formatNumber(value, 2)]}
+                labelFormatter={(label: number) => isAnnualView ? `Year ${Math.ceil(label / 12)}` : `Month ${label}`}
+                contentStyle={{
+                  backgroundColor: 'var(--popover)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--popover-foreground)'
+                }}
+              />
               <Legend />
               {showLoanBalance && <Line type="monotone" dataKey="remainingBalance" name="Remaining Loan Balance" stroke="#8884d8" dot={false} activeDot={{ r: 8 }} />}
               {showCumulativeProfit && <Line type="monotone" dataKey="cumulativeProfit" name="Cumulative Profit" stroke="#82ca9d" dot={false} activeDot={{ r: 8 }} />}
