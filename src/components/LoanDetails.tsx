@@ -92,10 +92,19 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   const amortizationSchedule = calculateAmortizationSchedule()
 
-  const renderRow = (label: string, value: number | string, percentage: number | null = null) => (
+  const renderRow = (label: string, value: string | number, percentage: number | null = null, inputProps?: React.InputHTMLAttributes<HTMLInputElement>) => (
     <TableRow>
       <TableCell className="font-medium">{label}</TableCell>
-      <TableCell>{typeof value === 'number' ? `$${formatNumber(value)}` : value}</TableCell>
+      <TableCell>
+        {inputProps ? (
+          <Input
+            type="number"
+            {...inputProps}
+          />
+        ) : (
+          typeof value === 'number' ? `$${formatNumber(value)}` : value
+        )}
+      </TableCell>
       {percentage !== null && (
         <TableCell>{formatNumber(percentage, 1)}%</TableCell>
       )}
@@ -130,59 +139,37 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
             <TableBody>
               {data.isBusinessPurchase && (
                 <>
-                  {renderRow("Purchase Price", 
-                    <Input
-                      type="number"
-                      value={data.purchasePrice}
-                      onChange={(e) => handleInputChange('purchasePrice', Number(e.target.value))}
-                    />,
-                    null
-                  )}
-                  {renderRow("Down Payment", 
-                    <Input
-                      type="number"
-                      value={data.downPayment}
-                      onChange={(e) => handleInputChange('downPayment', Number(e.target.value))}
-                    />,
-                    (data.downPayment / data.purchasePrice) * 100
-                  )}
-                  {renderRow("3rd Party Investment", 
-                    <Input
-                      type="number"
-                      value={data.thirdPartyInvestment}
-                      onChange={(e) => handleInputChange('thirdPartyInvestment', Number(e.target.value))}
-                    />,
-                    (data.thirdPartyInvestment / data.purchasePrice) * 100
-                  )}
+                  {renderRow("Purchase Price", data.purchasePrice, null, {
+                    value: data.purchasePrice,
+                    onChange: (e) => handleInputChange('purchasePrice', Number(e.target.value))
+                  })}
+                  {renderRow("Down Payment", data.downPayment, (data.downPayment / data.purchasePrice) * 100, {
+                    value: data.downPayment,
+                    onChange: (e) => handleInputChange('downPayment', Number(e.target.value))
+                  })}
+                  {renderRow("3rd Party Investment", data.thirdPartyInvestment, (data.thirdPartyInvestment / data.purchasePrice) * 100, {
+                    value: data.thirdPartyInvestment,
+                    onChange: (e) => handleInputChange('thirdPartyInvestment', Number(e.target.value))
+                  })}
                 </>
               )}
               {renderRow("Loan Amount", 
-                data.isBusinessPurchase ? 
-                  `$${formatNumber(calculatedLoanAmount)}` :
-                  <Input
-                    type="number"
-                    value={data.loanAmount}
-                    onChange={(e) => handleInputChange('loanAmount', Number(e.target.value))}
-                  />,
-                null
+                data.isBusinessPurchase ? calculatedLoanAmount : data.loanAmount,
+                null,
+                !data.isBusinessPurchase ? {
+                  value: data.loanAmount,
+                  onChange: (e) => handleInputChange('loanAmount', Number(e.target.value))
+                } : undefined
               )}
-              {renderRow("Interest Rate (%)", 
-                <Input
-                  type="number"
-                  value={data.interestRate}
-                  onChange={(e) => handleInputChange('interestRate', Number(e.target.value))}
-                />,
-                null
-              )}
-              {renderRow("Loan Term (years)", 
-                <Input
-                  type="number"
-                  value={data.loanTerm}
-                  onChange={(e) => handleInputChange('loanTerm', Number(e.target.value))}
-                />,
-                null
-              )}
-              {renderRow("Monthly Payment", isNaN(monthlyPayment) ? 'N/A' : formatNumber(monthlyPayment), null)}
+              {renderRow("Interest Rate (%)", data.interestRate, null, {
+                value: data.interestRate,
+                onChange: (e) => handleInputChange('interestRate', Number(e.target.value))
+              })}
+              {renderRow("Loan Term (years)", data.loanTerm, null, {
+                value: data.loanTerm,
+                onChange: (e) => handleInputChange('loanTerm', Number(e.target.value))
+              })}
+              {renderRow("Monthly Payment", isNaN(monthlyPayment) ? 'N/A' : monthlyPayment, null)}
             </TableBody>
           </Table>
           <div className="mt-4">
