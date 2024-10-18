@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Home, Search, Layers, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, Zap, X, Menu, Plus, Trash2 } from 'lucide-react'
+import { Home, Search, Layers, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, Zap, X, Menu, Plus, Trash2, Edit2 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useTheme } from '@/components/ThemeProvider'
@@ -61,7 +61,9 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
           </Button>
         </div>
         <nav className="flex-1 space-y-1 p-2">
-          <NavItem icon={<Home className="mr-2 h-4 w-4" />}>Home</NavItem>
+          <Link href="/">
+            <NavItem icon={<Home className="mr-2 h-4 w-4" />}>Home</NavItem>
+          </Link>
           <NavItem icon={<Search className="mr-2 h-4 w-4" />}>Search</NavItem>
           <div className="py-1">
             <div className="flex items-center justify-between px-2">
@@ -165,7 +167,17 @@ const NavItem = ({
 const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelete: () => void }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [isHovered, setIsHovered] = useState(false)
+    const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
+    const [newName, setNewName] = useState(name)
+    const { updateProjectName } = useProject()
   
+    const handleRename = () => {
+      if (newName.trim() && newName !== name) {
+        updateProjectName(id, newName)
+        setIsRenameDialogOpen(false)
+      }
+    }
+
     return (
       <div
         onMouseEnter={() => setIsHovered(true)}
@@ -194,38 +206,71 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
           </div>
         </Button>
         {isHovered && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 absolute right-0"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete()
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="absolute right-0 flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsRenameDialogOpen(true)
+              }}
+            >
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
       {isOpen && (
         <div className="ml-6 space-y-1 mt-1">
-        <Link href={`/project/${id}`}>
-          <NavItem>Overview</NavItem>
-        </Link>
-        <Link href={`/project/${id}/balance-sheet`}>
-          <NavItem>Balance Sheet</NavItem>
-        </Link>
-        <Link href={`/project/${id}/cash-flow`}>
-          <NavItem>Cash Flow</NavItem>
-        </Link>
-        <Link href={`/project/${id}/income-statement`}>
-          <NavItem>Income Statement</NavItem>
-        </Link>
-        <Link href={`/project/${id}/loan-details`}>
-          <NavItem>Loan Details</NavItem>
-        </Link>
-      </div>
+          <Link href={`/project/${id}`}>
+            <NavItem>Overview</NavItem>
+          </Link>
+          <Link href={`/project/${id}/balance-sheet`}>
+            <NavItem>Balance Sheet</NavItem>
+          </Link>
+          <Link href={`/project/${id}/cash-flow`}>
+            <NavItem>Cash Flow</NavItem>
+          </Link>
+          <Link href={`/project/${id}/income-statement`}>
+            <NavItem>Income Statement</NavItem>
+          </Link>
+          <Link href={`/project/${id}/loan-details`}>
+            <NavItem>Loan Details</NavItem>
+          </Link>
+        </div>
       )}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Project</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            handleRename()
+          }}>
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder="New project name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+              />
+              <Button type="submit">Rename</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

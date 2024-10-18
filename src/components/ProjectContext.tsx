@@ -15,6 +15,7 @@ type ProjectContextType = {
   selectProject: (id: string) => void;
   updateProjectData: (id: string, data: any) => void;
   deleteProject: (id: string) => void;
+  updateProjectName: (id: string, newName: string) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined)
@@ -68,8 +69,27 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const updateProjectName = (id: string, newName: string) => {
+    const updatedProjects = projects.map(project => 
+      project.id === id ? { ...project, name: newName.trim() } : project
+    )
+    setProjects(updatedProjects)
+    localStorage.setItem('projects', JSON.stringify(updatedProjects))
+    if (currentProject && currentProject.id === id) {
+      setCurrentProject({ ...currentProject, name: newName.trim() })
+    }
+  }
+
   return (
-    <ProjectContext.Provider value={{ projects, currentProject, addProject, selectProject, updateProjectData, deleteProject }}>
+    <ProjectContext.Provider value={{ 
+      projects, 
+      currentProject, 
+      addProject, 
+      selectProject, 
+      updateProjectData, 
+      deleteProject,
+      updateProjectName
+    }}>
       {children}
     </ProjectContext.Provider>
   )
