@@ -1,14 +1,15 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Home, Search, Layers, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, Zap, X, Menu, Plus, Trash2, Edit2 } from 'lucide-react'
+import { Home, Search, Sun, Moon, User, Settings, HelpCircle, ChevronDown, ChevronRight, ChevronLeft, Plus, Trash2, Edit2 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useTheme } from '@/components/ThemeProvider'
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useProject } from '@/components/ProjectContext'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const [isOpen, setIsOpen] = useState(true)
@@ -37,16 +38,6 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
 
   return (
     <>
-      {!isOpen && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="fixed top-4 left-4 z-50"
-          onClick={() => setIsOpen(true)}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-      )}
       <div
         className={cn(
           "fixed left-0 top-0 z-40 h-screen w-[250px] bg-background transition-transform duration-300 ease-in-out",
@@ -57,7 +48,7 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
         <div className="flex items-center justify-between p-4">
           <h2 className="text-lg font-semibold">Business Time</h2>
           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-            <X className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
         </div>
         <nav className="flex-1 space-y-1 p-2">
@@ -102,6 +93,16 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
           <NavItem icon={<HelpCircle className="mr-2 h-4 w-4" />}>Help</NavItem>
         </div>
       </div>
+      {!isOpen && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed top-4 left-4 z-50"
+          onClick={() => setIsOpen(true)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
       <Dialog open={isAddProjectDialogOpen} onOpenChange={setIsAddProjectDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -141,21 +142,16 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
 const NavItem = ({ 
   children, 
   icon, 
-  indent = false,
   onClick
 }: { 
   children: React.ReactNode
   icon?: React.ReactNode
-  indent?: boolean
   onClick?: () => void
 }) => {
   return (
     <Button
       variant="ghost"
-      className={cn(
-        "w-full justify-start font-normal h-8 px-2",
-        indent && "pl-8"
-      )}
+      className="w-full justify-start font-normal h-8 px-2"
       onClick={onClick}
     >
       {icon}
@@ -166,10 +162,10 @@ const NavItem = ({
 
 const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelete: () => void }) => {
     const [isOpen, setIsOpen] = useState(false)
-    const [isHovered, setIsHovered] = useState(false)
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
     const [newName, setNewName] = useState(name)
     const { updateProjectName } = useProject()
+    const router = useRouter()
   
     const handleRename = () => {
       if (newName.trim() && newName !== name) {
@@ -177,40 +173,33 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
         setIsRenameDialogOpen(false)
       }
     }
-
+  
     return (
-      <div
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="relative"
-      >
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          className="w-full justify-start font-normal h-8 px-2"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <div className="flex items-center w-full">
-            <div className="w-6 mr-2 flex justify-center">
-              {isHovered || isOpen ? (
-                isOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )
-              ) : (
-                <Zap className="h-4 w-4" />
-              )}
-            </div>
+      <div className="relative">
+        <div className="flex items-center group hover:bg-accent">
+          <Button
+            variant="ghost"
+            className="w-8 h-8 p-0 hover:bg-accent-foreground/10 group-hover:text-gray-700"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            className="flex-grow justify-start font-normal h-8 px-2 hover:bg-transparent"
+            onClick={() => router.push(`/project/${id}`)}
+          >
             {name}
-          </div>
-        </Button>
-        {isHovered && (
-          <div className="absolute right-0 flex">
+          </Button>
+          <div className="absolute right-0 flex opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 hover:bg-accent-foreground/10 hover:text-gray-700"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsRenameDialogOpen(true)
@@ -221,7 +210,7 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 hover:bg-accent-foreground/10 hover:text-gray-700"
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete()
@@ -230,27 +219,26 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-        )}
-      </div>
-      {isOpen && (
-        <div className="ml-6 space-y-1 mt-1">
-          <Link href={`/project/${id}`}>
-            <NavItem>Overview</NavItem>
-          </Link>
-          <Link href={`/project/${id}/balance-sheet`}>
-            <NavItem>Balance Sheet</NavItem>
-          </Link>
-          <Link href={`/project/${id}/cash-flow`}>
-            <NavItem>Cash Flow</NavItem>
-          </Link>
-          <Link href={`/project/${id}/income-statement`}>
-            <NavItem>Income Statement</NavItem>
-          </Link>
-          <Link href={`/project/${id}/loan-details`}>
-            <NavItem>Loan Details</NavItem>
-          </Link>
         </div>
-      )}
+        {isOpen && (
+          <div className="ml-6 space-y-1 mt-1">
+            <Link href={`/project/${id}`}>
+              <NavItem>Overview</NavItem>
+            </Link>
+            <Link href={`/project/${id}/balance-sheet`}>
+              <NavItem>Balance Sheet</NavItem>
+            </Link>
+            <Link href={`/project/${id}/cash-flow`}>
+              <NavItem>Cash Flow</NavItem>
+            </Link>
+            <Link href={`/project/${id}/income-statement`}>
+              <NavItem>Income Statement</NavItem>
+            </Link>
+            <Link href={`/project/${id}/loan-details`}>
+              <NavItem>Loan Details</NavItem>
+            </Link>
+          </div>
+        )}
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent>
           <DialogHeader>
