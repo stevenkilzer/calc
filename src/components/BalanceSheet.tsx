@@ -8,14 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatNumber } from "@/lib/utils"
 import { FormattedNumberInput } from '@/components/FormattedNumberInput'
+import { calculateFinancials, FinancialData } from '@/lib/financialCalculations'
 
-type BalanceSheetData = {
-  revenue: { ecommerce: number; wholesale: number; }
-  cogs: number;
-  selling: number;
-  marketing: number;
-  coreOverhead: number;
-}
+type BalanceSheetData = FinancialData['balanceSheet']
 
 const defaultData: BalanceSheetData = {
   revenue: { ecommerce: 0, wholesale: 0 },
@@ -68,14 +63,11 @@ export default function BalanceSheetPage() {
     }
   }
 
-  // Calculations
-  const netRevenue = data.revenue.ecommerce + data.revenue.wholesale
-  const grossProfit = netRevenue - data.cogs
-  const grossMargin = netRevenue !== 0 ? (grossProfit / netRevenue) * 100 : 0
-  const contributionProfit = grossProfit - data.selling - data.marketing
-  const contributionMargin = netRevenue !== 0 ? (contributionProfit / netRevenue) * 100 : 0
-  const operatingIncome = contributionProfit - data.coreOverhead
-  const operatingMargin = netRevenue !== 0 ? (operatingIncome / netRevenue) * 100 : 0
+  const financials = calculateFinancials({
+    balanceSheet: data,
+    loanDetails: project?.data?.loanDetails || { loanAmount: 0, interestRate: 0, loanTerm: 0 },
+    cashFlow: project?.data?.cashFlow || { operating: 0, investing: 0, financing: 0 },
+  })
 
   const renderRow = (label: string, value: number, isInput: boolean = false, field: keyof BalanceSheetData, subfield: keyof BalanceSheetData['revenue'] | null = null, isTotal: boolean = false) => (
     <TableRow className={isTotal ? "bg-muted" : ""}>
@@ -91,7 +83,7 @@ export default function BalanceSheetPage() {
           `$${formatNumber(value)}`
         )}
       </TableCell>
-      <TableCell>{netRevenue !== 0 ? `${formatNumber((value / netRevenue) * 100, 1)}%` : 'N/A'}</TableCell>
+      <TableCell>{financials.netRevenue !== 0 ? `${formatNumber((value / financials.netRevenue) * 100, 1)}%` : 'N/A'}</TableCell>
     </TableRow>
   )
 
@@ -119,25 +111,25 @@ export default function BalanceSheetPage() {
               </TableRow>
               {renderRow("E-commerce", data.revenue.ecommerce, true, 'revenue', 'ecommerce')}
               {renderRow("Wholesale", data.revenue.wholesale, true, 'revenue', 'wholesale')}
-              {renderRow("Net Revenue", netRevenue, false, 'revenue', null, true)}
+              {renderRow("Net Revenue", financials.netRevenue, false, 'revenue', null, true)}
               {renderRow("COGs", data.cogs, true, 'cogs')}
-              {renderRow("Gross Profit", grossProfit, false, 'revenue', null, true)}
+              {renderRow("Gross Profit", financials.grossProfit, false, 'revenue', null, true)}
               <TableRow>
                 <TableCell className="pl-4 italic">Gross Margin</TableCell>
-                <TableCell colSpan={2}>{formatNumber(grossMargin, 1)}%</TableCell>
+                <TableCell colSpan={2}>{formatNumber(financials.grossMargin, 1)}%</TableCell>
               </TableRow>
               {renderRow("Selling", data.selling, true, 'selling')}
               {renderRow("Marketing", data.marketing, true, 'marketing')}
-              {renderRow("Contribution Profit", contributionProfit, false, 'revenue', null, true)}
+              {renderRow("Contribution Profit", financials.contributionProfit, false, 'revenue', null, true)}
               <TableRow>
                 <TableCell className="pl-4 italic">Contribution Margin</TableCell>
-                <TableCell colSpan={2}>{formatNumber(contributionMargin, 1)}%</TableCell>
+                <TableCell colSpan={2}>{formatNumber(financials.contributionMargin, 1)}%</TableCell>
               </TableRow>
               {renderRow("Core Overhead", data.coreOverhead, true, 'coreOverhead')}
-              {renderRow("Operating Income", operatingIncome, false, 'revenue', null, true)}
+              {renderRow("Operating Income", financials.operatingIncome, false, 'revenue', null, true)}
               <TableRow>
                 <TableCell className="pl-4 italic">Operating Margin</TableCell>
-                <TableCell colSpan={2}>{formatNumber(operatingMargin, 1)}%</TableCell>
+                <TableCell colSpan={2}>{formatNumber(financials.operatingMargin, 1)}%</TableCell>
               </TableRow>
             </TableBody>
           </Table>

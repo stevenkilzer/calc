@@ -10,15 +10,13 @@ import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatNumber } from "@/lib/utils"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { calculateFinancials, generateAmortizationSchedule, FinancialData } from '@/lib/financialCalculations'
 
-type LoanData = {
+type LoanData = FinancialData['loanDetails'] & {
   isBusinessPurchase: boolean;
   purchasePrice: number;
   downPayment: number;
   thirdPartyInvestment: number;
-  loanAmount: number;
-  interestRate: number;
-  loanTerm: number;
 }
 
 const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
@@ -51,46 +49,17 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
     }
   }
 
-  // Calculations
   const calculatedLoanAmount = data.isBusinessPurchase
     ? data.purchasePrice - data.downPayment - data.thirdPartyInvestment
     : data.loanAmount
 
-  const monthlyInterestRate = data.interestRate / 12 / 100
-  const numberOfPayments = data.loanTerm * 12
-  const monthlyPayment = calculatedLoanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1)
+  const financials = calculateFinancials({
+    balanceSheet: project?.data?.balanceSheet || { revenue: { ecommerce: 0, wholesale: 0 }, cogs: 0, selling: 0, marketing: 0, coreOverhead: 0 },
+    loanDetails: { ...data, loanAmount: calculatedLoanAmount },
+    cashFlow: project?.data?.cashFlow || { operating: 0, investing: 0, financing: 0 },
+  })
 
-  // Calculate amortization schedule
-  const calculateAmortizationSchedule = () => {
-    let remainingBalance = calculatedLoanAmount
-    let totalPrincipalPaid = 0
-    let totalInterestPaid = 0
-    let totalPaid = 0
-    const schedule = []
-
-    for (let month = 1; month <= numberOfPayments; month++) {
-      const interestPayment = remainingBalance * monthlyInterestRate
-      const principalPayment = monthlyPayment - interestPayment
-      remainingBalance -= principalPayment
-      totalPrincipalPaid += principalPayment
-      totalInterestPaid += interestPayment
-      totalPaid += monthlyPayment
-
-      if (month % 12 === 0 || month === 1 || month === numberOfPayments) {
-        schedule.push({
-          month,
-          remainingBalance,
-          totalPrincipalPaid,
-          totalInterestPaid,
-          totalPaid
-        })
-      }
-    }
-
-    return schedule
-  }
-
-  const amortizationSchedule = calculateAmortizationSchedule()
+  const amortizationSchedule = generateAmortizationSchedule({ ...data, loanAmount: calculatedLoanAmount })
 
   const renderRow = (label: string, value: string | number, percentage: number | null = null, inputProps?: React.InputHTMLAttributes<HTMLInputElement>) => (
     <TableRow>
@@ -169,7 +138,7 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
                 value: data.loanTerm,
                 onChange: (e) => handleInputChange('loanTerm', Number(e.target.value))
               })}
-              {renderRow("Monthly Payment", isNaN(monthlyPayment) ? 'N/A' : monthlyPayment, null)}
+              {renderRow("Monthly Payment", financials.monthlyPayment, null)}
             </TableBody>
           </Table>
           <div className="mt-4">
@@ -197,9 +166,8 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
               />
               <Legend />
               <Line type="monotone" dataKey="remainingBalance" name="Remaining Balance" stroke="#8884d8" />
-              <Line type="monotone" dataKey="totalPrincipalPaid" name="Total Principal Paid" stroke="#82ca9d" />
-              <Line type="monotone" dataKey="totalInterestPaid" name="Total Interest Paid" stroke="#ffc658" />
-              <Line type="monotone" dataKey="totalPaid" name="Total Paid" stroke="#ff7300" />
+              <Line type="monotone" dataKey="principalPayment" name="Principal Payment" stroke="#82ca9d" />
+              <Line type="monotone" dataKey="interestPayment" name="Interest Payment" stroke="#ffc658" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -213,16 +181,8 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
           <Table>
             <TableBody>
               {renderRow("Total Principal", formatNumber(calculatedLoanAmount))}
-              {amortizationSchedule.length > 0 ? (
-                <>
-                  {renderRow("Total Interest", formatNumber(amortizationSchedule[amortizationSchedule.length - 1].totalInterestPaid))}
-                  {renderRow("Total Paid", formatNumber(amortizationSchedule[amortizationSchedule.length - 1].totalPaid))}
-                </>
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3}>Unable to calculate loan summary. Please ensure all loan details are entered correctly.</TableCell>
-                </TableRow>
-              )}
+              {renderRow("Total Interest", formatNumber(financials.totalInterest))}
+              {renderRow("Total Paid", formatNumber(financials.totalPaid))}
             </TableBody>
           </Table>
         </CardContent>
