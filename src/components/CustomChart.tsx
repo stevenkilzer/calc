@@ -49,75 +49,75 @@ export const CustomChart: React.FC<CustomChartProps> = ({
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="month" 
+          <XAxis
+            dataKey="month"
             label={{ value: isAnnualView ? 'Year' : 'Month', position: 'insideBottomRight', offset: -10 }}
             tickFormatter={(value) => isAnnualView ? Math.ceil(value / 12).toString() : value.toString()}
           />
           <YAxis label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft' }} />
-          <Tooltip 
+          <Tooltip
             formatter={(value: number) => ['$' + formatNumber(value, 2)]}
             labelFormatter={(label: number) => isAnnualView ? `Year ${Math.ceil(label / 12)}` : `Month ${label}`}
           />
           <Legend />
           {showLoanBalance && (
-            <Line 
-              type="monotone" 
-              dataKey="remainingBalance" 
-              name="Remaining Balance" 
-              stroke="#8884d8" 
+            <Line
+              type="monotone"
+              dataKey="remainingBalance"
+              name="Remaining Balance"
+              stroke="hsl(var(--chart-5))"
               dot={false}
               activeDot={{ r: 8 }}
             />
           )}
           {showCumulativeProfit && (
-            <Line 
-              type="monotone" 
-              dataKey="cumulativeProfit" 
-              name="Cumulative Profit" 
-              stroke="#82ca9d" 
+            <Line
+              type="monotone"
+              dataKey="cumulativeProfit"
+              name="Cumulative Profit"
+              stroke="hsl(var(--chart-4))"
               dot={false}
               activeDot={{ r: 8 }}
             />
           )}
           {showCashFlow && (
-            <Line 
-              type="monotone" 
-              dataKey="cumulativeCashFlow" 
-              name="Cumulative Cash Flow" 
-              stroke="#ffc658" 
+            <Line
+              type="monotone"
+              dataKey="cumulativeCashFlow"
+              name="Cumulative Cash Flow"
+              stroke="hsl(var(--chart-3))"
               dot={false}
               activeDot={{ r: 8 }}
             />
           )}
           {showPrincipalPayment && (
-            <Line 
-              type="monotone" 
-              dataKey="principalPayment" 
-              name="Principal Payment" 
-              stroke="#ff7300" 
+            <Line
+              type="monotone"
+              dataKey="principalPayment"
+              name="Principal Payment"
+              stroke="hsl(var(--chart-2))"
               dot={false}
               activeDot={{ r: 8 }}
             />
           )}
           {showInterestPayment && (
-            <Line 
-              type="monotone" 
-              dataKey="interestPayment" 
-              name="Interest Payment" 
-              stroke="#e91e63" 
+            <Line
+              type="monotone"
+              dataKey="interestPayment"
+              name="Interest Payment"
+              stroke="hsl(var(--chart-1))"
               dot={false}
               activeDot={{ r: 8 }}
             />
           )}
           {breakEvenMonth && (
-            <ReferenceLine 
-              x={breakEvenMonth} 
+            <ReferenceLine
+              x={breakEvenMonth}
               stroke="red"
-              label={{ 
-                value: "Break-even", 
+              label={{
+                value: "Break-even",
                 position: 'insideBottomLeft',
-                fill: 'var(--foreground)',
+                fill: 'hsl(var(--foreground))',
                 fontSize: 12
               }}
             />
