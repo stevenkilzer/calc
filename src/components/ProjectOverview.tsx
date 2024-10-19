@@ -133,18 +133,16 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
 
 // Helper function to safely calculate cash flow totals
 function calculateCashFlowTotal(activities: Record<string, unknown> | undefined): number {
-    if (!activities) return 0;
-    return Object.values(activities).reduce((sum, value) => {
-      if (typeof value === 'number') {
-        return sum + value;
-      }
-      // If the value is a string that can be parsed as a number, parse and add it
-      if (typeof value === 'string' && !isNaN(Number(value))) {
-        return sum + Number(value);
-      }
-      // For all other types, just return the current sum without adding
-      return sum;
-    }, 0);
-  }
+  if (!activities) return 0;
+  return Object.values(activities).reduce((sum, value) => {
+    if (typeof value === 'number') {
+      return sum + value;
+    }
+    if (typeof value === 'string' && !isNaN(Number(value))) {
+      return sum + Number(value);
+    }
+    return sum;
+  }, 0 as number);
+}
 
 export default ProjectOverview
