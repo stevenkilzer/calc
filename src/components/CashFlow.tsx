@@ -125,7 +125,7 @@ const CashFlow: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   const renderField = (label: string, value: number, editable: boolean, category: keyof CashFlowData, field: string) => (
     <TableRow key={field}>
-      <TableCell className="pl-4">{label}</TableCell>
+      <TableCell className="pl-8">{label}</TableCell>
       <TableCell>
         {editable ? (
           <Input
@@ -143,8 +143,8 @@ const CashFlow: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   const renderSection = (title: string, data: Record<string, number>, category: keyof CashFlowData) => (
     <>
-      <TableRow>
-        <TableCell colSpan={2} className="font-bold">{title}</TableCell>
+      <TableRow className="bg-muted">
+        <TableCell colSpan={2} className="font-medium">{title}</TableCell>
       </TableRow>
       {Object.entries(data).map(([key, value]) => {
         const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
@@ -154,16 +154,16 @@ const CashFlow: React.FC<{ projectId: string }> = ({ projectId }) => {
         )
         return renderField(label, value, editable, category, key)
       })}
-      <TableRow className="bg-muted">
-        <TableCell className="font-bold">Total {title}</TableCell>
-        <TableCell className="font-bold">${formatNumber(calculateTotal(category))}</TableCell>
+      <TableRow className="h-16">
+        <TableCell className="font-medium pl-8">Total {title}</TableCell>
+        <TableCell className="font-medium " >${formatNumber(calculateTotal(category))}</TableCell>
       </TableRow>
     </>
   )
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Cash Flow Statement - {project?.name}</h1>
+      <h1 className="text-2xl font-medium mb-4">Cash Flow - {project?.name}</h1>
       <Card>
         <CardHeader>
           <CardTitle>Cash Flow Details</CardTitle>
@@ -180,7 +180,7 @@ const CashFlow: React.FC<{ projectId: string }> = ({ projectId }) => {
               {renderSection('Operating Activities', cashFlowData.operatingActivities, 'operatingActivities')}
               {renderSection('Investing Activities', cashFlowData.investingActivities, 'investingActivities')}
               {renderSection('Financing Activities', cashFlowData.financingActivities, 'financingActivities')}
-              <TableRow className="bg-primary text-primary-foreground">
+              <TableRow className="bg-muted">
                 <TableCell className="font-bold">Net Cash Flow</TableCell>
                 <TableCell className="font-bold">${formatNumber(netCashFlow)}</TableCell>
               </TableRow>
