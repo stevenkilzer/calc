@@ -5,7 +5,7 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProjectProvider } from '@/components/ProjectContext'
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -26,6 +26,10 @@ export default function RootLayout({
 }>) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  const handleSidebarToggle = useCallback((isOpen: boolean) => {
+    setIsSidebarOpen(isOpen);
+  }, []);
+
   return (
     <html lang="en">
       <body
@@ -33,7 +37,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <ProjectProvider>
-            <Sidebar onToggle={(isOpen) => setIsSidebarOpen(isOpen)} />
+            <Sidebar onToggle={handleSidebarToggle} />
             <main className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'sm:ml-[250px]' : 'sm:ml-0'}`}>
               {children}
             </main>
