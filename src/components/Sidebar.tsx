@@ -222,18 +222,18 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
           </div>
         </div>
         {isOpen && (
-          <div className="ml-8 space-y-1 mt-1">
+          <div className="space-y-1">
             <Link href={`/project/${id}/balance-sheet`}>
-              <NavItem className="pl-0">Balance Sheet</NavItem>
+              <NavItem className="pl-10">Balance Sheet</NavItem>
             </Link>
             <Link href={`/project/${id}/cash-flow`}>
-              <NavItem className="pl-0">Cash Flow</NavItem>
+              <NavItem className="pl-10">Cash Flow</NavItem>
             </Link>
             <Link href={`/project/${id}/income-statement`}>
-              <NavItem className="pl-0">Income Statement</NavItem>
+              <NavItem className="pl-10">Income Statement</NavItem>
             </Link>
             <Link href={`/project/${id}/loan-details`}>
-              <NavItem className="pl-0">Loan Details</NavItem>
+              <NavItem className="pl-10">Loan Details</NavItem>
             </Link>
           </div>
         )}
