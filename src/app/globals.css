@@ -81,3 +81,20 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Remove spinner from number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* New styles for table row hover effect on inputs */
+tr:hover input {
+  border-color: hsl(var(--accent-foreground));
+  transition: border-color 0.2s ease-in-out;
+}
