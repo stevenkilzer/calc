@@ -37,9 +37,15 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
       loanTerm: 0,
     },
     cashFlow: {
-      operating: project.data?.cashFlow?.operatingActivities ? Object.values(project.data.cashFlow.operatingActivities).reduce((sum, value) => sum + value, 0) : 0,
-      investing: project.data?.cashFlow?.investingActivities ? Object.values(project.data.cashFlow.investingActivities).reduce((sum, value) => sum + value, 0) : 0,
-      financing: project.data?.cashFlow?.financingActivities ? Object.values(project.data.cashFlow.financingActivities).reduce((sum, value) => sum + value, 0) : 0,
+      operating: project.data?.cashFlow?.operatingActivities 
+        ? Object.values(project.data.cashFlow.operatingActivities).reduce((sum, value) => sum + (typeof value === 'number' ? value : 0), 0)
+        : 0,
+      investing: project.data?.cashFlow?.investingActivities
+        ? Object.values(project.data.cashFlow.investingActivities).reduce((sum, value) => sum + (typeof value === 'number' ? value : 0), 0)
+        : 0,
+      financing: project.data?.cashFlow?.financingActivities
+        ? Object.values(project.data.cashFlow.financingActivities).reduce((sum, value) => sum + (typeof value === 'number' ? value : 0), 0)
+        : 0,
     },
   }
 
