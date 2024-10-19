@@ -56,29 +56,29 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
             <NavItem icon={<Home className="mr-2 h-4 w-4" />}>Home</NavItem>
           </Link>
           <div className="py-1">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-sm font-semibold">Projects</h3>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 p-0"
-                onClick={() => setIsAddProjectDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            {projects.map((project) => (
-              <ProjectItem 
-                key={project.id} 
-                id={project.id}
-                name={project.name} 
-                onDelete={() => {
-                  setProjectToDelete(project.id)
-                  setIsDeleteDialogOpen(true)
-                }}
-              />
-            ))}
-          </div>
+  <div className="flex items-center justify-between px-2 pr-0">
+    <h3 className="text-sm font-semibold">Projects</h3>
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      className="h-8 w-8 p-0"
+      onClick={() => setIsAddProjectDialogOpen(true)}
+    >
+      <Plus className="h-4 w-4" />
+    </Button>
+  </div>
+  {projects.map((project) => (
+    <ProjectItem 
+      key={project.id} 
+      id={project.id}
+      name={project.name} 
+      onDelete={() => {
+        setProjectToDelete(project.id)
+        setIsDeleteDialogOpen(true)
+      }}
+    />
+  ))}
+</div>
         </nav>
         <div className="mt-auto border-t p-2 space-y-1">
           <NavItem 
@@ -180,7 +180,7 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
         <div className="flex items-center group hover:bg-accent">
           <Button
             variant="ghost"
-            className="w-8 h-8 p-0 hover:bg-accent-foreground/10 group-hover:text-gray-700"
+            className="w-8 h-8 p-0 hover:bg-accent-foreground/10 group-hover:text-text-muted-foreground"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? (
@@ -200,7 +200,7 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-accent-foreground/10 hover:text-gray-700"
+              className="h-8 w-8 hover:bg-accent-foreground/10 hover:text-text-muted-foreground"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsRenameDialogOpen(true)
@@ -211,7 +211,7 @@ const ProjectItem = ({ id, name, onDelete }: { id: string, name: string; onDelet
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-accent-foreground/10 hover:text-gray-700"
+              className="h-8 w-8 hover:bg-accent-foreground/10 hover:text-text-muted-foreground"
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete()
