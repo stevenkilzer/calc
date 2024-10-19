@@ -11,7 +11,11 @@ import { useProject } from '@/components/ProjectContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-const Sidebar = ({ className, onToggle }: React.HTMLAttributes<HTMLDivElement> & { onToggle?: (isOpen: boolean) => void }) => {
+interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+  onToggle?: (isOpen: boolean) => void;
+}
+
+const Sidebar = ({ className, onToggle }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(true)
   const [newProjectName, setNewProjectName] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
