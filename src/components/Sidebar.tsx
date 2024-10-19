@@ -11,7 +11,7 @@ import { useProject } from '@/components/ProjectContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
+const Sidebar = ({ className, onToggle }: React.HTMLAttributes<HTMLDivElement> & { onToggle?: (isOpen: boolean) => void }) => {
   const [isOpen, setIsOpen] = useState(true)
   const [newProjectName, setNewProjectName] = useState('')
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -36,6 +36,11 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
     }
   }
 
+  const toggleSidebar = (open: boolean) => {
+    setIsOpen(open);
+    onToggle?.(open);
+  }
+
   return (
     <>
       <div
@@ -47,7 +52,7 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
       >
         <div className="flex items-center justify-between p-4">
           <h2 className="text-lg font-semibold">Business Time</h2>
-          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+          <Button variant="ghost" size="icon" onClick={() => toggleSidebar(false)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
         </div>
@@ -56,29 +61,29 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
             <NavItem icon={<Home className="mr-2 h-4 w-4" />}>Home</NavItem>
           </Link>
           <div className="py-1">
-  <div className="flex items-center justify-between px-2 pr-0">
-    <h3 className="text-sm font-semibold">Projects</h3>
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      className="h-8 w-8 p-0"
-      onClick={() => setIsAddProjectDialogOpen(true)}
-    >
-      <Plus className="h-4 w-4" />
-    </Button>
-  </div>
-  {projects.map((project) => (
-    <ProjectItem 
-      key={project.id} 
-      id={project.id}
-      name={project.name} 
-      onDelete={() => {
-        setProjectToDelete(project.id)
-        setIsDeleteDialogOpen(true)
-      }}
-    />
-  ))}
-</div>
+            <div className="flex items-center justify-between px-2 pr-0">
+              <h3 className="text-sm font-semibold">Projects</h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 p-0"
+                onClick={() => setIsAddProjectDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {projects.map((project) => (
+              <ProjectItem 
+                key={project.id} 
+                id={project.id}
+                name={project.name} 
+                onDelete={() => {
+                  setProjectToDelete(project.id)
+                  setIsDeleteDialogOpen(true)
+                }}
+              />
+            ))}
+          </div>
         </nav>
         <div className="mt-auto border-t p-2 space-y-1">
           <NavItem 
@@ -97,7 +102,7 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
           variant="outline"
           size="icon"
           className="fixed top-4 left-4 z-50"
-          onClick={() => setIsOpen(true)}
+          onClick={() => toggleSidebar(true)}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
