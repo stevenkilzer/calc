@@ -1,5 +1,3 @@
-// financialCalculations.ts
-
 export interface FinancialData {
     balanceSheet: {
       revenue: { ecommerce: number; wholesale: number };
@@ -9,6 +7,10 @@ export interface FinancialData {
       coreOverhead: number;
     };
     loanDetails: {
+      isBusinessPurchase: boolean;
+      purchasePrice: number;
+      downPayment: number;
+      thirdPartyInvestment: number;
       loanAmount: number;
       interestRate: number;
       loanTerm: number;
@@ -20,7 +22,24 @@ export interface FinancialData {
     };
   }
   
-  export function calculateFinancials(data: FinancialData) {
+  export interface CalculatedFinancials {
+    netRevenue: number;
+    grossProfit: number;
+    grossMargin: number;
+    contributionProfit: number;
+    contributionMargin: number;
+    operatingIncome: number;
+    operatingMargin: number;
+    loanAmount: number;
+    monthlyPayment: number;
+    totalInterest: number;
+    totalPaid: number;
+    netCashFlow: number;
+    monthlyInterestRate: number;
+    numberOfPayments: number;
+  }
+  
+  export function calculateFinancials(data: FinancialData): CalculatedFinancials {
     const balanceSheet = calculateBalanceSheet(data.balanceSheet);
     const loanDetails = calculateLoanDetails(data.loanDetails);
     const cashFlow = calculateCashFlow(data.cashFlow);
@@ -53,17 +72,23 @@ export interface FinancialData {
   }
   
   function calculateLoanDetails(loanDetails: FinancialData['loanDetails']) {
+    const loanAmount = loanDetails.isBusinessPurchase
+      ? loanDetails.purchasePrice - loanDetails.downPayment - loanDetails.thirdPartyInvestment
+      : loanDetails.loanAmount;
     const monthlyInterestRate = loanDetails.interestRate / 12 / 100;
     const numberOfPayments = loanDetails.loanTerm * 12;
     const monthlyPayment = 
-      loanDetails.loanAmount * 
+      loanAmount * 
       (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / 
       (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
   
     return {
+      loanAmount,
       monthlyPayment: isNaN(monthlyPayment) ? 0 : monthlyPayment,
-      totalInterest: (monthlyPayment * numberOfPayments) - loanDetails.loanAmount,
+      totalInterest: (monthlyPayment * numberOfPayments) - loanAmount,
       totalPaid: monthlyPayment * numberOfPayments,
+      monthlyInterestRate,
+      numberOfPayments,
     };
   }
   
@@ -75,7 +100,16 @@ export interface FinancialData {
     };
   }
   
-  export function generateAmortizationSchedule(loanDetails: FinancialData['loanDetails']) {
+  export interface AmortizationScheduleItem {
+    month: number;
+    payment: number;
+    principalPayment: number;
+    interestPayment: number;
+    remainingBalance: number;
+    cumulativeInterest: number;
+  }
+  
+  export function generateAmortizationSchedule(loanDetails: FinancialData['loanDetails']): AmortizationScheduleItem[] {
     const { loanAmount, interestRate, loanTerm } = loanDetails;
     const monthlyInterestRate = interestRate / 12 / 100;
     const numberOfPayments = loanTerm * 12;
@@ -85,12 +119,14 @@ export interface FinancialData {
       (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
   
     let remainingBalance = loanAmount;
-    const schedule = [];
+    let cumulativeInterest = 0;
+    const schedule: AmortizationScheduleItem[] = [];
   
     for (let month = 1; month <= numberOfPayments; month++) {
       const interestPayment = remainingBalance * monthlyInterestRate;
       const principalPayment = monthlyPayment - interestPayment;
       remainingBalance -= principalPayment;
+      cumulativeInterest += interestPayment;
   
       schedule.push({
         month,
@@ -98,8 +134,47 @@ export interface FinancialData {
         principalPayment,
         interestPayment,
         remainingBalance,
+        cumulativeInterest,
       });
     }
   
     return schedule;
+  }
+  
+  export function calculateCombinedSchedule(financials: CalculatedFinancials, loanDetails: FinancialData['loanDetails'], numberOfMonths: number = 120) {
+    const loanAmount = loanDetails.isBusinessPurchase
+      ? loanDetails.purchasePrice - loanDetails.downPayment - loanDetails.thirdPartyInvestment
+      : loanDetails.loanAmount;
+    let remainingBalance = loanAmount;
+    let cumulativeProfit = -loanAmount;
+    let cumulativeCashFlow = 0;
+    const schedule = [];
+    let breakEvenMonth = null;
+  
+    const monthlyProfit = financials.operatingIncome / 12;
+    const monthlyCashFlow = financials.netCashFlow / 12;
+  
+    for (let month = 1; month <= Math.max(numberOfMonths, financials.numberOfPayments); month++) {
+      if (month <= financials.numberOfPayments) {
+        const interestPayment = remainingBalance * financials.monthlyInterestRate;
+        const principalPayment = financials.monthlyPayment - interestPayment;
+        remainingBalance -= principalPayment;
+      }
+  
+      cumulativeProfit += monthlyProfit;
+      cumulativeCashFlow += monthlyCashFlow;
+  
+      if (cumulativeProfit >= 0 && breakEvenMonth === null) {
+        breakEvenMonth = month;
+      }
+  
+      schedule.push({
+        month,
+        remainingBalance,
+        cumulativeProfit,
+        cumulativeCashFlow
+      });
+    }
+  
+    return { schedule, breakEvenMonth };
   }

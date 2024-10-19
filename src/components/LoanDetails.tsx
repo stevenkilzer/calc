@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect } from 'react'
 import { useProject } from '@/components/ProjectContext'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,15 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatNumber } from "@/lib/utils"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { calculateFinancials, generateAmortizationSchedule, FinancialData } from '@/lib/financialCalculations'
+import { CustomChart } from '@/components/CustomChart'
+import { calculateFinancials, generateAmortizationSchedule, FinancialData, CalculatedFinancials } from '@/lib/financialCalculations'
 
-type LoanData = FinancialData['loanDetails'] & {
-  isBusinessPurchase: boolean;
-  purchasePrice: number;
-  downPayment: number;
-  thirdPartyInvestment: number;
-}
+type LoanData = FinancialData['loanDetails']
 
 const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
   const { projects, updateProjectData } = useProject()
@@ -32,6 +25,10 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
     interestRate: 0,
     loanTerm: 0,
   })
+
+  const [showPrincipalPayment, setShowPrincipalPayment] = useState(true)
+  const [showInterestPayment, setShowInterestPayment] = useState(true)
+  const [isAnnualView, setIsAnnualView] = useState(false)
 
   useEffect(() => {
     if (project && project.data && project.data.loanDetails) {
@@ -53,7 +50,7 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
     ? data.purchasePrice - data.downPayment - data.thirdPartyInvestment
     : data.loanAmount
 
-  const financials = calculateFinancials({
+  const financials: CalculatedFinancials = calculateFinancials({
     balanceSheet: project?.data?.balanceSheet || { revenue: { ecommerce: 0, wholesale: 0 }, cogs: 0, selling: 0, marketing: 0, coreOverhead: 0 },
     loanDetails: { ...data, loanAmount: calculatedLoanAmount },
     cashFlow: project?.data?.cashFlow || { operating: 0, investing: 0, financing: 0 },
@@ -152,24 +149,31 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
           <CardTitle>Amortization Chart</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart
-              data={amortizationSchedule}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" label={{ value: 'Month', position: 'insideBottomRight', offset: -10 }} />
-              <YAxis label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip 
-                formatter={(value: number) => ['$' + formatNumber(value, 2)]}
-                labelFormatter={(label: number) => `Month ${label}`}
-              />
-              <Legend />
-              <Line type="monotone" dataKey="remainingBalance" name="Remaining Balance" stroke="#8884d8" />
-              <Line type="monotone" dataKey="principalPayment" name="Principal Payment" stroke="#82ca9d" />
-              <Line type="monotone" dataKey="interestPayment" name="Interest Payment" stroke="#ffc658" />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center space-x-2">
+              <Switch id="principal-payment" checked={showPrincipalPayment} onCheckedChange={setShowPrincipalPayment} />
+              <Label htmlFor="principal-payment">Show Principal Payment</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="interest-payment" checked={showInterestPayment} onCheckedChange={setShowInterestPayment} />
+              <Label htmlFor="interest-payment">Show Interest Payment</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="annual-view" checked={isAnnualView} onCheckedChange={setIsAnnualView} />
+              <Label htmlFor="annual-view">Annual View</Label>
+            </div>
+          </div>
+          <CustomChart
+            data={amortizationSchedule}
+            title=""
+            showLoanBalance={true}
+            showCumulativeProfit={false}
+            showCashFlow={false}
+            showPrincipalPayment={showPrincipalPayment}
+            showInterestPayment={showInterestPayment}
+            isAnnualView={isAnnualView}
+            height={400}
+          />
         </CardContent>
       </Card>
 
