@@ -41,9 +41,9 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
           loanTerm: 0,
         },
         cashFlow: project.data.cashFlow || {
-          operatingActivities: {},
-          investingActivities: {},
-          financingActivities: {},
+          operating: 0,
+          investing: 0,
+          financing: 0,
         },
       }
 
@@ -56,9 +56,9 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
 
       // Calculate monthly cash flow
       const totalCashFlow = 
-        calculateCashFlowTotal(financialData.cashFlow.operatingActivities) +
-        calculateCashFlowTotal(financialData.cashFlow.investingActivities) +
-        calculateCashFlowTotal(financialData.cashFlow.financingActivities)
+        financialData.cashFlow.operating +
+        financialData.cashFlow.investing +
+        financialData.cashFlow.financing
       
       const monthlyFlow = totalCashFlow / 12
       setMonthlyCashFlow(monthlyFlow)
@@ -116,10 +116,6 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
                 <TableCell>${formatNumber(financials.loanAmount)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-medium">Monthly Cash Flow</TableCell>
-                <TableCell>${formatNumber(monthlyCashFlow)}</TableCell>
-              </TableRow>
-              <TableRow>
                 <TableCell className="font-medium">Monthly Loan Payment</TableCell>
                 <TableCell>${formatNumber(financials.monthlyPayment)}</TableCell>
               </TableRow>
@@ -153,10 +149,6 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
               <Label htmlFor="monthly-net-income">Show Monthly Net Income</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch id="monthly-cash-flow" checked={showMonthlyCashFlow} onCheckedChange={setShowMonthlyCashFlow} />
-              <Label htmlFor="monthly-cash-flow">Show Monthly Cash Flow</Label>
-            </div>
-            <div className="flex items-center space-x-2">
               <Switch id="cumulative-profit" checked={showCumulativeProfit} onCheckedChange={setShowCumulativeProfit} />
               <Label htmlFor="cumulative-profit">Show Cumulative Profit</Label>
             </div>
@@ -175,20 +167,6 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
       </Card>
     </div>
   )
-}
-
-// Helper function to safely calculate cash flow totals
-function calculateCashFlowTotal(activities: Record<string, unknown> | undefined): number {
-  if (!activities) return 0;
-  return Object.values(activities).reduce<number>((sum, value) => {
-    if (typeof value === 'number') {
-      return sum + value;
-    }
-    if (typeof value === 'string' && !isNaN(Number(value))) {
-      return sum + Number(value);
-    }
-    return sum;
-  }, 0);
 }
 
 export default ProjectOverview;
