@@ -168,7 +168,8 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
             title=""
             showLoanBalance={true}
             showCumulativeProfit={false}
-            showCashFlow={false}
+            showMonthlyNetIncome={false}
+            showMonthlyCashFlow={false}
             showPrincipalPayment={showPrincipalPayment}
             showInterestPayment={showInterestPayment}
             isAnnualView={isAnnualView}
