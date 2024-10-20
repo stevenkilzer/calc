@@ -112,20 +112,20 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
                 <TableCell>${formatNumber(financials.operatingIncome)} ({formatNumber(financials.operatingMargin, 1)}%)</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-medium">Monthly Net Income</TableCell>
-                <TableCell>${formatNumber(monthlyNetIncome)}</TableCell>
-              </TableRow>
-              <TableRow>
                 <TableCell className="font-medium">Loan Amount</TableCell>
                 <TableCell>${formatNumber(financials.loanAmount)}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-medium">Monthly Cash Flow</TableCell>
+                <TableCell>${formatNumber(monthlyCashFlow)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-medium">Monthly Loan Payment</TableCell>
                 <TableCell>${formatNumber(financials.monthlyPayment)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-medium">Monthly Cash Flow</TableCell>
-                <TableCell>${formatNumber(monthlyCashFlow)}</TableCell>
+                <TableCell className="font-medium">Monthly Net Income</TableCell>
+                <TableCell>${formatNumber(monthlyNetIncome)}</TableCell>
               </TableRow>
               {chartData.length > 0 && chartData[chartData.length - 1].breakEvenMonth && (
                 <TableRow>
