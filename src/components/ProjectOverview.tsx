@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useProject } from '@/components/ProjectContext'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -13,38 +13,80 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
   const project = projects.find(p => p.id === projectId)
 
   const [showLoanBalance, setShowLoanBalance] = useState(true)
+  const [showMonthlyNetIncome, setShowMonthlyNetIncome] = useState(true)
+  const [showMonthlyCashFlow, setShowMonthlyCashFlow] = useState(true)
   const [showCumulativeProfit, setShowCumulativeProfit] = useState(true)
-  const [showCashFlow, setShowCashFlow] = useState(true)
-  const [isAnnualView, setIsAnnualView] = useState(false)
+  const [financials, setFinancials] = useState<CalculatedFinancials | null>(null)
+  const [monthlyNetIncome, setMonthlyNetIncome] = useState(0)
+  const [monthlyCashFlow, setMonthlyCashFlow] = useState(0)
+  const [chartData, setChartData] = useState<any[]>([])
 
-  if (!project) return <div>Project not found</div>
+  useEffect(() => {
+    if (project && project.data) {
+      const financialData: FinancialData = {
+        balanceSheet: project.data.balanceSheet || {
+          revenue: { ecommerce: 0, wholesale: 0 },
+          cogs: 0,
+          selling: 0,
+          marketing: 0,
+          coreOverhead: 0,
+        },
+        loanDetails: project.data.loanDetails || {
+          isBusinessPurchase: false,
+          purchasePrice: 0,
+          downPayment: 0,
+          thirdPartyInvestment: 0,
+          loanAmount: 0,
+          interestRate: 0,
+          loanTerm: 0,
+        },
+        cashFlow: project.data.cashFlow || {
+          operatingActivities: {},
+          investingActivities: {},
+          financingActivities: {},
+        },
+      }
 
-  const financialData: FinancialData = {
-    balanceSheet: project.data?.balanceSheet || {
-      revenue: { ecommerce: 0, wholesale: 0 },
-      cogs: 0,
-      selling: 0,
-      marketing: 0,
-      coreOverhead: 0,
-    },
-    loanDetails: project.data?.loanDetails || {
-      isBusinessPurchase: false,
-      purchasePrice: 0,
-      downPayment: 0,
-      thirdPartyInvestment: 0,
-      loanAmount: 0,
-      interestRate: 0,
-      loanTerm: 0,
-    },
-    cashFlow: {
-      operating: calculateCashFlowTotal(project.data?.cashFlow?.operatingActivities),
-      investing: calculateCashFlowTotal(project.data?.cashFlow?.investingActivities),
-      financing: calculateCashFlowTotal(project.data?.cashFlow?.financingActivities),
-    },
-  }
+      const calculatedFinancials = calculateFinancials(financialData)
+      setFinancials(calculatedFinancials)
 
-  const financials: CalculatedFinancials = calculateFinancials(financialData)
-  const { schedule, breakEvenMonth } = calculateCombinedSchedule(financials, financialData.loanDetails)
+      // Calculate monthly net income
+      const monthlyIncome = calculatedFinancials.operatingIncome / 12
+      setMonthlyNetIncome(monthlyIncome)
+
+      // Calculate monthly cash flow
+      const totalCashFlow = 
+        calculateCashFlowTotal(financialData.cashFlow.operatingActivities) +
+        calculateCashFlowTotal(financialData.cashFlow.investingActivities) +
+        calculateCashFlowTotal(financialData.cashFlow.financingActivities)
+      
+      const monthlyFlow = totalCashFlow / 12
+      setMonthlyCashFlow(monthlyFlow)
+
+      // Calculate chart data
+      const { schedule, breakEvenMonth } = calculateCombinedSchedule(calculatedFinancials, financialData.loanDetails)
+      
+      // Calculate monthly loan payment
+      const monthlyLoanPayment = calculatedFinancials.monthlyPayment
+
+      // Add monthly net income, monthly cash flow, and cumulative profit to the schedule
+      let cumulativeProfit = 0
+      const updatedSchedule = schedule.map((item, index) => {
+        const monthlyProfit = monthlyIncome - monthlyLoanPayment
+        cumulativeProfit += monthlyProfit
+        return {
+          ...item,
+          monthlyNetIncome: monthlyIncome,
+          monthlyCashFlow: monthlyFlow,
+          cumulativeProfit: cumulativeProfit
+        }
+      })
+
+      setChartData(updatedSchedule)
+    }
+  }, [project])
+
+  if (!project || !financials) return <div>Loading project data...</div>
 
   return (
     <div className="container mx-auto p-4">
@@ -70,6 +112,10 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
                 <TableCell>${formatNumber(financials.operatingIncome)} ({formatNumber(financials.operatingMargin, 1)}%)</TableCell>
               </TableRow>
               <TableRow>
+                <TableCell className="font-medium">Monthly Net Income</TableCell>
+                <TableCell>${formatNumber(monthlyNetIncome)}</TableCell>
+              </TableRow>
+              <TableRow>
                 <TableCell className="font-medium">Loan Amount</TableCell>
                 <TableCell>${formatNumber(financials.loanAmount)}</TableCell>
               </TableRow>
@@ -78,13 +124,13 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
                 <TableCell>${formatNumber(financials.monthlyPayment)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-medium">Net Cash Flow</TableCell>
-                <TableCell>${formatNumber(financials.netCashFlow)}</TableCell>
+                <TableCell className="font-medium">Monthly Cash Flow</TableCell>
+                <TableCell>${formatNumber(monthlyCashFlow)}</TableCell>
               </TableRow>
-              {breakEvenMonth && (
+              {chartData.length > 0 && chartData[chartData.length - 1].breakEvenMonth && (
                 <TableRow>
                   <TableCell className="font-medium">Break-even Point</TableCell>
-                  <TableCell>{breakEvenMonth} months</TableCell>
+                  <TableCell>{chartData[chartData.length - 1].breakEvenMonth} months</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -103,26 +149,26 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
               <Label htmlFor="loan-balance">Show Loan Balance</Label>
             </div>
             <div className="flex items-center space-x-2">
+              <Switch id="monthly-net-income" checked={showMonthlyNetIncome} onCheckedChange={setShowMonthlyNetIncome} />
+              <Label htmlFor="monthly-net-income">Show Monthly Net Income</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="monthly-cash-flow" checked={showMonthlyCashFlow} onCheckedChange={setShowMonthlyCashFlow} />
+              <Label htmlFor="monthly-cash-flow">Show Monthly Cash Flow</Label>
+            </div>
+            <div className="flex items-center space-x-2">
               <Switch id="cumulative-profit" checked={showCumulativeProfit} onCheckedChange={setShowCumulativeProfit} />
               <Label htmlFor="cumulative-profit">Show Cumulative Profit</Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="cash-flow" checked={showCashFlow} onCheckedChange={setShowCashFlow} />
-              <Label htmlFor="cash-flow">Show Cash Flow</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="annual-view" checked={isAnnualView} onCheckedChange={setIsAnnualView} />
-              <Label htmlFor="annual-view">Annual View</Label>
-            </div>
           </div>
           <CustomChart
-            data={schedule}
+            data={chartData}
             title=""
             showLoanBalance={showLoanBalance}
+            showMonthlyNetIncome={showMonthlyNetIncome}
+            showMonthlyCashFlow={showMonthlyCashFlow}
             showCumulativeProfit={showCumulativeProfit}
-            showCashFlow={showCashFlow}
-            isAnnualView={isAnnualView}
-            breakEvenMonth={breakEvenMonth}
+            breakEvenMonth={chartData.length > 0 ? chartData[chartData.length - 1].breakEvenMonth : undefined}
             height={600}
           />
         </CardContent>
@@ -133,16 +179,16 @@ const ProjectOverview: React.FC<{ projectId: string }> = ({ projectId }) => {
 
 // Helper function to safely calculate cash flow totals
 function calculateCashFlowTotal(activities: Record<string, unknown> | undefined): number {
-    if (!activities) return 0;
-    return Object.values(activities).reduce<number>((sum, value) => {
-      if (typeof value === 'number') {
-        return sum + value;
-      }
-      if (typeof value === 'string' && !isNaN(Number(value))) {
-        return sum + Number(value);
-      }
-      return sum;
-    }, 0);
-  }
-  
-  export default ProjectOverview;
+  if (!activities) return 0;
+  return Object.values(activities).reduce<number>((sum, value) => {
+    if (typeof value === 'number') {
+      return sum + value;
+    }
+    if (typeof value === 'string' && !isNaN(Number(value))) {
+      return sum + Number(value);
+    }
+    return sum;
+  }, 0);
+}
+
+export default ProjectOverview;
