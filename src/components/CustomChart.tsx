@@ -33,8 +33,12 @@ export const CustomChart: React.FC<CustomChartProps> = ({
 }) => {
   const [xDomain, setXDomain] = useState<[number, number]>([0, data.length - 1]);
 
-  const handleBrushChange = useCallback((newIndex: { startIndex: number; endIndex: number }) => {
-    setXDomain([newIndex.startIndex, newIndex.endIndex]);
+  const handleBrushChange = useCallback((brushData: any) => {
+    if (Array.isArray(brushData)) {
+      setXDomain(brushData as [number, number]);
+    } else if (brushData && typeof brushData === 'object' && 'startIndex' in brushData && 'endIndex' in brushData) {
+      setXDomain([brushData.startIndex, brushData.endIndex]);
+    }
   }, []);
 
   if (!data || data.length === 0) {
