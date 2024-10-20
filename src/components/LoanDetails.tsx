@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatNumber } from "@/lib/utils"
-import { CustomChart } from '@/components/CustomChart'
+import { LoanAmortizationChart } from '@/components/LoanAmortizationChart'
 import { calculateFinancials, generateAmortizationSchedule, FinancialData, CalculatedFinancials } from '@/lib/financialCalculations'
 
 type LoanData = FinancialData['loanDetails']
@@ -28,7 +28,6 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   const [showPrincipalPayment, setShowPrincipalPayment] = useState(true)
   const [showInterestPayment, setShowInterestPayment] = useState(true)
-  const [isAnnualView, setIsAnnualView] = useState(false)
 
   useEffect(() => {
     if (project && project.data && project.data.loanDetails) {
@@ -158,21 +157,11 @@ const LoanDetails: React.FC<{ projectId: string }> = ({ projectId }) => {
               <Switch id="interest-payment" checked={showInterestPayment} onCheckedChange={setShowInterestPayment} />
               <Label htmlFor="interest-payment">Show Interest Payment</Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="annual-view" checked={isAnnualView} onCheckedChange={setIsAnnualView} />
-              <Label htmlFor="annual-view">Annual View</Label>
-            </div>
           </div>
-          <CustomChart
+          <LoanAmortizationChart
             data={amortizationSchedule}
-            title=""
-            showLoanBalance={true}
-            showCumulativeProfit={false}
-            showMonthlyNetIncome={false}
-            showMonthlyCashFlow={false}
             showPrincipalPayment={showPrincipalPayment}
             showInterestPayment={showInterestPayment}
-            isAnnualView={isAnnualView}
             height={400}
           />
         </CardContent>
